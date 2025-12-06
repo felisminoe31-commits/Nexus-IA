@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nexus Super App</title>
+    
+    <!-- CDNs -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        dark: '#0f172a',
+                        glass: 'rgba(255, 255, 255, 0.05)',
+                        neon: '#8b5cf6',
+                        accent: '#06b6d4',
+                        primary: '#6366f1'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 6s ease-in-out 3s infinite',
+                        'spin-slow': 'spin 15s linear infinite',
+                        'marquee': 'marquee 25s linear infinite',
+                        'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'nebula': 'nebula 20s ease infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        marquee: {
+                            '0%': { transform: 'translateX(0%)' },
+                            '100%': { transform: 'translateX(-50%)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(40px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        nebula: {
+                            '0%': { transform: 'scale(1) rotate(0deg)' },
+                            '50%': { transform: 'scale(1.1) rotate(180deg)' },
+                            '100%': { transform: 'scale(1) rotate(360deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #050b14; color: white; overflow-x: hidden; }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* 3D Effects */
+        .perspective-container {
+            perspective: 1000px;
+        }
+        
+        .card-3d {
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+        }
+        
+        .card-3d:hover {
+            transform: rotateY(10deg) rotateX(10deg) scale(1.05);
+            box-shadow: -20px 20px 60px rgba(99, 102, 241, 0.2);
+        }
+
+        /* 3D Atom Animation CSS */
+        .atom-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            transform-style: preserve-3d;
+            animation: spin-atom 20s linear infinite;
+        }
+        
+        .orbit {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            transform-style: preserve-3d;
+        }
+        
+        .orbit:nth-child(1) { transform: rotateY(0deg); }
+        .orbit:nth-child(2) { transform: rotateY(60deg); }
+        .orbit:nth-child(3) { transform: rotateY(120deg); }
+        
+        .electron {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 12px; height: 12px;
+            background: #06b6d4;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #06b6d4, 0 0 30px #06b6d4;
+            transform: translate(-50%, -50%) translateX(100px) rotateY(90deg);
+            animation: electron-spin 3s linear infinite;
+        }
+
+        .core {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px; height: 60px;
+            background: radial-gradient(circle, #8b5cf6, #4c1d95);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+        }
+
+        /* Loader & Utils */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-left-color: #8b5cf6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin-atom { 0% { transform: rotate3d(0, 0, 1, 0deg); } 100% { transform: rotate3d(0, 0, 1, 360deg); } }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .text-gradient-premium {
+            background: linear-gradient(135deg, #c084fc 0%, #6366f1 50%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1"
+  }
+}
+</script>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+    <div id="root"></div>
+</body>
+</html>
